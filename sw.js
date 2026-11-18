@@ -1,5 +1,5 @@
 // Keeps the app working with a weak signal: app files are served from cache, then refreshed.
-const CACHE = "tiquets-v1";
+const CACHE = "tiquets-v2";
 const FILES = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png",
   "jspdf.umd.min.js"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES))); self.skipWaiting(); });

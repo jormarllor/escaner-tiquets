@@ -613,6 +613,18 @@ function buildPdf(m) {
   doc.setProperties({ title: m.subject });
   return new File([doc.output("blob")], m.filename, { type: "application/pdf" });
 }
+async function checkScript(url) {
+  if (!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(url))
+    return { ok: false, why: "L'URL no té el format correcte: ha de començar per https://script.google.com/macros/s/ i acabar en /exec." };
+  try {
+    const res = await fetch(url, { method: "GET", cache: "no-store" });
+    const out = await res.json();
+    if (out && out.ok) return { ok: true };
+    return { ok: false, why: "L'script respon però no és el de Tiquets." };
+  } catch (err) {
+    return { ok: false, why: "L'script no respon. Fes una implementació nova (Aplicació web · Executa com a: Jo · Qualsevol usuari) i posa l'URL nou a la configuració." };
+  }
+}
 function blobToBase64(blob) {
   return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1]); r.onerror = rej; r.readAsDataURL(blob); });
 }
@@ -646,7 +658,15 @@ $("btnSend").addEventListener("click", async () => {
       remember(m, "script"); resetAll();
       setStatus("Enviat a " + (out.to || "la teva bústia") + ".", "ok");
     } catch (err) {
-      setStatus("No s'ha pogut enviar: " + err.message + " Pots compartir-lo manualment.", "err");
+      if (err instanceof TypeError) {
+        setStatus("Comprovant la connexió amb l'script…");
+        const chk = await checkScript(settings.url);
+        setStatus(chk.ok
+          ? "L'script funciona però l'enviament no s'ha confirmat. Mira la bústia abans de tornar-ho a provar; mentrestant pots compartir-lo manualment."
+          : "No s'ha pogut enviar. " + chk.why, "err");
+      } else {
+        setStatus("No s'ha pogut enviar: " + err.message + " Pots compartir-lo manualment.", "err");
+      }
       offerManual(file, m);
     }
     return;
@@ -680,8 +700,12 @@ $("btnSettings").addEventListener("click", () => {
 });
 $("dlgSettings").addEventListener("close", () => {
   if ($("dlgSettings").returnValue !== "save") return;
-  settings = { email: $("setEmail").value.trim(), url: $("setUrl").value.trim(), token: $("setToken").value.trim(), mode: $("setMode").value };
+  settings = { email: $("setEmail").value.trim(), url: $("setUrl").value.replace(/\s+/g, ""), token: $("setToken").value.trim(), mode: $("setMode").value };
   store.set("tiq.settings", settings); render();
+  if (settings.url) {
+    setStatus("Comprovant l'script…");
+    checkScript(settings.url).then((chk) => setStatus(chk.ok ? "Script connectat correctament." : chk.why, chk.ok ? "ok" : "err"));
+  }
 });
 
 render();
