@@ -1,25 +1,23 @@
 /**
- * Tiquets — enviament directe a la teva bústia.
+ * Tiquets: enviament directe a la teva bústia.
  *
- * 1. Canvia SECRET per una paraula llarga que només sàpigues tu.
- * 2. Implementa > Nova implementació > Tipus: Aplicació web
- *      Executa com a: Jo     ·     Qui hi té accés: Qualsevol usuari
- * 3. Copia l'URL que acaba en /exec i posa-la a la configuració de l'app, amb el mateix SECRET.
+ * 1. Canvia SECRET per una clau llarga que només sàpigues tu.
+ * 2. Opcional: posa a DESTINATARI l'adreça on vols rebre els tiquets (buit = el teu compte de Google).
+ * 3. Desa. Implementa > Nova implementació > Aplicació web
+ *      Executa com a: Jo  ·  Qui hi té accés: Qualsevol usuari
+ * 4. Copia l'URL que acaba en /exec i posa-la a l'app, amb la mateixa clau.
  *
- * El correu sempre va al propietari d'aquest script (tu): l'app no pot triar un altre destinatari,
- * així ningú no pot fer servir l'URL per enviar correus a tercers.
+ * Abans d'enganxar, buida l'editor del tot (Ctrl+A, Suprimeix) i deixa un sol fitxer al projecte.
  */
-const SECRET = 'canvia-aquesta-clau';
-
-// Opcional: posa aquí una altra adreça teva (p. ex. la de la feina). Buit = el teu compte de Google.
-const DESTINATARI = '';
+var SECRET = 'canvia-aquesta-clau';
+var DESTINATARI = '';
 
 function doPost(e) {
   try {
-    const data = JSON.parse(e.postData.contents);
+    var data = JSON.parse(e.postData.contents);
     if (data.token !== SECRET) return json_({ ok: false, error: 'token' });
-    const to = DESTINATARI || Session.getEffectiveUser().getEmail();
-    const blob = Utilities.newBlob(Utilities.base64Decode(data.file), data.mime || 'application/pdf', data.filename || 'tiquet.pdf');
+    var to = DESTINATARI || Session.getEffectiveUser().getEmail();
+    var blob = Utilities.newBlob(Utilities.base64Decode(data.file), 'application/pdf', data.filename || 'tiquet.pdf');
     MailApp.sendEmail({
       to: to,
       subject: String(data.subject || 'Tiquet').slice(0, 200),
@@ -29,7 +27,7 @@ function doPost(e) {
     });
     return json_({ ok: true, to: to });
   } catch (err) {
-    return json_({ ok: false, error: String(err && err.message || err) });
+    return json_({ ok: false, error: String(err) });
   }
 }
 
