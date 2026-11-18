@@ -700,7 +700,7 @@ $("btnSettings").addEventListener("click", () => {
 });
 $("dlgSettings").addEventListener("close", () => {
   if ($("dlgSettings").returnValue !== "save") return;
-  settings = { email: $("setEmail").value.trim(), url: $("setUrl").value.replace(/\s+/g, ""), token: $("setToken").value.trim(), mode: $("setMode").value };
+  settings = { email: $("setEmail").value.trim(), url: $("setUrl").value.replace(/\s+/g, "").replace(/\/macros\/u\/\d+\/s\//, "/macros/s/").replace(/\/exec[?#].*$/, "/exec"), token: $("setToken").value.trim(), mode: $("setMode").value };
   store.set("tiq.settings", settings); render();
   if (settings.url) {
     setStatus("Comprovant l'script…");
