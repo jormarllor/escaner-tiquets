@@ -93,6 +93,7 @@ function enviaResum_(mes) {
   var items = [];
   while (files.hasNext()) {
     var f = files.next();
+    if (f.isTrashed()) continue;
     var info = {};
     try { info = JSON.parse(f.getDescription() || '{}'); } catch (x) { info = {}; }
     items.push({ file: f, at: info.at ? new Date(info.at) : f.getDateCreated(),
