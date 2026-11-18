@@ -1,7 +1,7 @@
 // Keeps the app working with a weak signal.
 // The page itself is fetched from the network first (so updates show up at once) and falls back to the cache offline;
 // the other files are served from cache and refreshed in the background.
-const CACHE = "tiquets-v4";
+const CACHE = "tiquets-v5";
 const FILES = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png",
   "jspdf.umd.min.js"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES))); self.skipWaiting(); });

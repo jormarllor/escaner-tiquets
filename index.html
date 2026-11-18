@@ -204,6 +204,8 @@ code { font-family: var(--mono); font-size: 13px; }
       <select id="setMode"><option value="doc">Document (blanc i negre net)</option><option value="gray">Gris</option><option value="color">Color</option></select>
     </label>
     <p class="hint">Amb l'URL i la clau, el PDF arriba a la teva bústia amb un sol toc. Sense, s'obre el menú <b>Compartir</b> del telèfon i tries l'app de correu.</p>
+    <p class="hint">El dia 1 de cada mes reps un correu amb tots els tiquets del mes anterior i el total.</p>
+    <button type="button" id="btnSummary" class="btn">Envia ara el resum d'aquest mes</button>
     <div class="dlg-actions">
       <button value="cancel" formnovalidate>Tanca</button>
       <button value="save" class="primary" id="setSave">Desa</button>
@@ -651,12 +653,15 @@ $("btnSend").addEventListener("click", async () => {
       setStatus("Enviant…");
       const res = await fetch(settings.url, {
         method: "POST",
-        body: JSON.stringify({ token: settings.token, subject: m.subject, body: m.body, filename: m.filename, mime: "application/pdf", file: await blobToBase64(file) })
+        body: JSON.stringify({ token: settings.token, subject: m.subject, body: m.body, filename: m.filename, mime: "application/pdf",
+          type: selectedType, amount: m.amount, note: m.note, at: m.now.toISOString(), file: await blobToBase64(file) })
       });
       const out = await res.json().catch(() => ({ ok: false, error: "Resposta inesperada de l'script." }));
       if (!out.ok) throw new Error(out.error === "token" ? "La clau secreta no coincideix amb la de l'script." : (out.error || "Error desconegut."));
       remember(m, "script"); resetAll();
-      setStatus("Enviat a " + (out.to || "la teva bústia") + ".", "ok");
+      setStatus(out.saved
+        ? (out.mailed ? "Enviat a " + (out.to || "la teva bústia") + " i desat per al resum mensual." : "Desat. Arribarà amb el resum mensual.")
+        : "Enviat a " + (out.to || "la teva bústia") + ".", "ok");
     } catch (err) {
       if (err instanceof TypeError) {
         setStatus("Comprovant la connexió amb l'script…");
@@ -691,6 +696,23 @@ async function offerManual(file, m, tryNow) {
 $("btnShareNow").addEventListener("click", async () => {
   if (!builtPdf) return;
   try { await share(builtPdf.file, builtPdf.m); } catch (err) { if (err.name !== "AbortError") setStatus("No s'ha pogut compartir: " + err.message, "err"); }
+});
+
+// ---------- monthly summary ----------
+$("btnSummary").addEventListener("click", async () => {
+  const url = $("setUrl").value.replace(/\s+/g, "").replace(/\/macros\/u\/\d+\/s\//, "/macros/s/").replace(/\/exec[?#].*$/, "/exec");
+  const token = $("setToken").value.trim();
+  $("dlgSettings").close();
+  if (!url || !token) { setStatus("Primer cal posar l'URL de l'script i la clau a la configuració.", "err"); return; }
+  setStatus("Preparant el resum del mes…");
+  try {
+    const res = await fetch(url, { method: "POST", body: JSON.stringify({ token, action: "summary" }) });
+    const out = await res.json();
+    if (!out.ok) throw new Error(out.error === "token" ? "La clau secreta no coincideix amb la de l'script." : (out.error || "Error desconegut."));
+    setStatus(out.count ? "Resum enviat a " + out.to + ": " + out.count + " tiquet" + (out.count === 1 ? "" : "s") + ", " + out.total + "." : "Aquest mes encara no hi ha cap tiquet desat.", "ok");
+  } catch (err) {
+    setStatus("No s'ha pogut enviar el resum: " + (err instanceof TypeError ? "l'script no respon o no està actualitzat (cal una versió nova de la implementació)." : err.message), "err");
+  }
 });
 
 // ---------- settings ----------

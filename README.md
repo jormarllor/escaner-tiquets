@@ -39,6 +39,10 @@ Fa servir un script gratuït al teu compte de Google, que envia el correu des de
 
 El botó passarà a dir **Envia al correu** i el PDF arribarà directament, sense passos intermedis.
 
+**Resum mensual.** Cada tiquet també es desa a Google Drive, a la carpeta `Tiquets/AAAA-MM`. El dia 1 de cada mes reps un correu amb tots els PDF del mes anterior i una taula amb data, tipus, import, nota i el total. Per activar-ho, a l'editor de l'script tria la funció `configura` i toca **Executa** (només cal un cop). Des de la roda dentada de l'app pots demanar el resum del mes en curs quan vulguis. Si només vols el resum mensual i no el correu de cada tiquet, posa `ENVIA_AL_MOMENT = false`.
+
+> Quan canviïs el codi de l'script, fes sempre **Implementa → Gestiona les implementacions → llapis → Versió nova**. Així l'URL no canvia.
+
 > Seguretat: l'script només envia a la teva adreça i comprova la clau secreta, per això ningú no el pot fer servir per enviar correus a altres persones. Límit de Google: unes 100 enviades al dia amb un compte gratuït.
 
 ### Opció B: sense configurar res
